@@ -1,0 +1,387 @@
+[
+    {
+        "id": "9d4c6c809e1dee8a",
+        "type": "tab",
+        "label": "Esp32_Gps_Full",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "4b326da282162709",
+        "type": "mqtt in",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "topic": "Gps/latitudine",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "fc2a1412.370a68",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 40,
+        "wires": [
+            [
+                "51865edb4aa04e60",
+                "8757d3a98c8b8953"
+            ]
+        ]
+    },
+    {
+        "id": "51865edb4aa04e60",
+        "type": "ui_text",
+        "z": "9d4c6c809e1dee8a",
+        "group": "453efb98d6c4fbb2",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Latitudine",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 300,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "e64b87d2f3e8392d",
+        "type": "ui_text",
+        "z": "9d4c6c809e1dee8a",
+        "group": "453efb98d6c4fbb2",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Longitudine",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 310,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "3ee1af99ce6c0eaf",
+        "type": "mqtt in",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "topic": "Gps/longitudine",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "fc2a1412.370a68",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 100,
+        "wires": [
+            [
+                "e64b87d2f3e8392d",
+                "5250cf10a275267e"
+            ]
+        ]
+    },
+    {
+        "id": "8757d3a98c8b8953",
+        "type": "change",
+        "z": "9d4c6c809e1dee8a",
+        "name": "Stringa a numero Lat",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$number(payload)",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 180,
+        "wires": [
+            [
+                "ea01121fda7a30d6",
+                "212b91f7810bae48"
+            ]
+        ]
+    },
+    {
+        "id": "2f7705bd86aec03b",
+        "type": "debug",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "5250cf10a275267e",
+        "type": "change",
+        "z": "9d4c6c809e1dee8a",
+        "name": "Stringa a numero Long",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$number(payload)",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 220,
+        "wires": [
+            [
+                "11be272fb93976e1",
+                "44e6da36b9038c7e"
+            ]
+        ]
+    },
+    {
+        "id": "4463c6214b38d90a",
+        "type": "comment",
+        "z": "9d4c6c809e1dee8a",
+        "name": "Esp32 Neo6m Ino",
+        "info": "/*\n * Crivellaro Diego\n */\n#include <WiFi.h>\n#include <PubSubClient.h> \n#include <TinyGPS++.h>\n#include <SoftwareSerial.h>\n\n#define wifi_ssid \"Casa_WiFi_2g\"\n#define wifi_password \"P@ssw0rd@2020\"\n\n#define mqtt_server \"10.0.2.43\"\n#define gps_topic \"Gps\"\n\nWiFiClient espClient;\nPubSubClient client(espClient);\n\nstatic const int RXPin = 4, TXPin = 2;\nstatic const uint32_t GPSBaud = 9600;\n\n// The TinyGPS++ object\nTinyGPSPlus gps;\n\n// The serial connection to the GPS device\nSoftwareSerial ss(RXPin, TXPin);\n\nvoid setup(){\n  Serial.begin(9600);\n  Serial.println(\"MQTT\");\n  setup_wifi();\n  client.setServer(mqtt_server, 1883);\n  ss.begin(GPSBaud);\n}\n\nvoid setup_wifi() {\n delay(10);\n // We start by connecting to a WiFi network\n Serial.println();\n Serial.print(\"Connecting to \");\n Serial.println(wifi_ssid);\n WiFi.begin(wifi_ssid, wifi_password);\n\nwhile (WiFi.status() != WL_CONNECTED) {\n delay(500);\n Serial.print(\".\");\n }\n\nSerial.println(\"\");\n Serial.println(\"WiFi connesso\");\n Serial.println(\"IP: \");\n Serial.println(WiFi.localIP());\n delay(500);\n }\n\nvoid reconnect() {\n // Loop until we're reconnected\n while (!client.connected()) {\n Serial.print(\"Attendo MQTT...\");\n // Attempt to connect\n // If you do not want to use a username and password, change next line to\n // if (client.connect(\"ESP8266Client\")) {\n if (client.connect(\"Coordinate\")) {\n Serial.println(\"connected\");\n } else {\n Serial.print(\"failed, rc=\");\n Serial.print(client.state());\n Serial.println(\" try again in 5 seconds\");\n // Wait 5 seconds before retrying\n delay(5000);\n}\n }\n  }\n\nvoid loop(){\n\n   if (!client.connected()) {\n  reconnect();\n }\n  \n  // This sketch displays information every time a new sentence is correctly encoded.\n  while (ss.available() > 0){\n    gps.encode(ss.read());\n\n    if (gps.location.isUpdated()){\n      // Latitude in degrees (double)\n      Serial.print(\"Latitude= \"); \n      Serial.print(gps.location.lat(), 6);      \n      // Longitude in degrees (double)\n      Serial.print(\" Longitude= \"); \n      Serial.println(gps.location.lng(), 6); \n       \n      // Raw latitude in whole degrees\n      Serial.print(\"Raw latitude = \"); \n      Serial.print(gps.location.rawLat().negative ? \"-\" : \"+\");\n      Serial.println(gps.location.rawLat().deg); \n      // ... and billionths (u16/u32)\n      Serial.println(gps.location.rawLat().billionths);\n      \n      // Raw longitude in whole degrees\n      Serial.print(\"Raw longitude = \"); \n      Serial.print(gps.location.rawLng().negative ? \"-\" : \"+\");\n      Serial.println(gps.location.rawLng().deg); \n      // ... and billionths (u16/u32)\n      Serial.println(gps.location.rawLng().billionths);\n\n      // Raw date in DDMMYY format (u32)\n      Serial.print(\"Raw date DDMMYY = \");\n      Serial.println(gps.date.value()); \n\n      // Year (2000+) (u16)\n      Serial.print(\"Year = \"); \n      Serial.println(gps.date.year()); \n      // Month (1-12) (u8)\n      Serial.print(\"Month = \"); \n      Serial.println(gps.date.month()); \n      // Day (1-31) (u8)\n      Serial.print(\"Day = \"); \n      Serial.println(gps.date.day()); \n\n      // Raw time in HHMMSSCC format (u32)\n      Serial.print(\"Raw time in HHMMSSCC = \"); \n      Serial.println(gps.time.value()); \n\n      // Hour (0-23) (u8)\n      Serial.print(\"Hour = \"); \n      Serial.println(gps.time.hour()); \n      // Minute (0-59) (u8)\n      Serial.print(\"Minute = \"); \n      Serial.println(gps.time.minute()); \n      // Second (0-59) (u8)\n      Serial.print(\"Second = \"); \n      Serial.println(gps.time.second()); \n      // 100ths of a second (0-99) (u8)\n      Serial.print(\"Centisecond = \"); \n      Serial.println(gps.time.centisecond()); \n\n      // Raw speed in 100ths of a knot (i32)\n      Serial.print(\"Raw speed in 100ths/knot = \");\n      Serial.println(gps.speed.value()); \n      // Speed in knots (double)\n      Serial.print(\"Speed in knots/h = \");\n      Serial.println(gps.speed.knots()); \n      // Speed in miles per hour (double)\n      Serial.print(\"Speed in miles/h = \");\n      Serial.println(gps.speed.mph()); \n      // Speed in meters per second (double)\n      Serial.print(\"Speed in m/s = \");\n      Serial.println(gps.speed.mps()); \n      // Speed in kilometers per hour (double)\n      Serial.print(\"Speed in km/h = \"); \n      Serial.println(gps.speed.kmph()); \n\n      // Raw course in 100ths of a degree (i32)\n      Serial.print(\"Raw course in degrees = \"); \n      Serial.println(gps.course.value()); \n      // Course in degrees (double)\n      Serial.print(\"Course in degrees = \"); \n      Serial.println(gps.course.deg()); \n\n      // Raw altitude in centimeters (i32)\n      Serial.print(\"Raw altitude in centimeters = \"); \n      Serial.println(gps.altitude.value()); \n      // Altitude in meters (double)\n      Serial.print(\"Altitude in meters = \"); \n      Serial.println(gps.altitude.meters()); \n      // Altitude in miles (double)\n      Serial.print(\"Altitude in miles = \"); \n      Serial.println(gps.altitude.miles()); \n      // Altitude in kilometers (double)\n      Serial.print(\"Altitude in kilometers = \"); \n      Serial.println(gps.altitude.kilometers()); \n      // Altitude in feet (double)\n      Serial.print(\"Altitude in feet = \"); \n      Serial.println(gps.altitude.feet()); \n\n      // Number of satellites in use (u32)\n      Serial.print(\"Number os satellites in use = \"); \n      Serial.println(gps.satellites.value()); \n\n      // Horizontal Dim. of Precision (100ths-i32)\n      Serial.print(\"HDOP = \"); \n      Serial.println(gps.hdop.value()); \n\n    String latitudine = String(gps.location.lat(), 6);\n    String longitudine = String(gps.location.lng(), 6);\n\n    char dato1[latitudine.length() + 1];\n    latitudine.toCharArray(dato1, latitudine.length());\n    client.publish(\"Gps/latitudine\", dato1);\n\n    char dato2[longitudine.length() + 1];\n    longitudine.toCharArray(dato2, longitudine.length());\n    client.publish(\"Gps/longitudine\", dato2);\n\n/*\n    String Dato = String(gps.location.lat(), 6) + ',' + String(gps.location.lng(), 6);\n    char dato[Dato.length() + 1];\n    Dato.toCharArray(dato, Dato.length());\n    client.publish(\"Gps/Data\", dato);\n*/\n\n\n    \n    String Dato = String(gps.location.lat(), 6) + String(gps.location.lng(), 6);\n    char dato[Dato.length() + 1];\n    Dato.toCharArray(dato, Dato.length());\n    client.publish(\"Gps/Data\", dato);\n\n      \n    }\n  }\n}",
+        "x": 110,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "1e555f87342ef261",
+        "type": "comment",
+        "z": "9d4c6c809e1dee8a",
+        "name": "Gmaps",
+        "info": "https://maps.google.com/maps/place/",
+        "x": 70,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "c914b0892fe8c711",
+        "type": "comment",
+        "z": "9d4c6c809e1dee8a",
+        "name": "msg.payload = { \"name\":\"Gps\", \"lat\":51.05, \"lon\":-1.35 }",
+        "info": "",
+        "x": 230,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "a3be694258700b62",
+        "type": "mqtt in",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "topic": "Gps/Data",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "fc2a1412.370a68",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ea01121fda7a30d6",
+        "type": "function",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "func": "msg.payload = \"Gps\" + \":\" + \" \" + \"Latitudine:\"+ msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 300,
+        "wires": [
+            [
+                "c2fca230a74860d3"
+            ]
+        ]
+    },
+    {
+        "id": "11be272fb93976e1",
+        "type": "function",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "func": "msg.payload = \",\" + \"Longitudine:\"+ msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 360,
+        "wires": [
+            [
+                "c2fca230a74860d3"
+            ]
+        ]
+    },
+    {
+        "id": "c2fca230a74860d3",
+        "type": "join",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "mode": "custom",
+        "build": "string",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 530,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "212b91f7810bae48",
+        "type": "function",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "func": "msg.payload = \"https://maps.google.com/maps/place/\" + msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 420,
+        "wires": [
+            [
+                "1c7d5496cb2bb14a"
+            ]
+        ]
+    },
+    {
+        "id": "44e6da36b9038c7e",
+        "type": "function",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "func": "msg.payload = \",\" + msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 460,
+        "wires": [
+            [
+                "1c7d5496cb2bb14a"
+            ]
+        ]
+    },
+    {
+        "id": "1c7d5496cb2bb14a",
+        "type": "join",
+        "z": "9d4c6c809e1dee8a",
+        "name": "",
+        "mode": "custom",
+        "build": "string",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 530,
+        "y": 420,
+        "wires": [
+            [
+                "2f7705bd86aec03b"
+            ]
+        ]
+    },
+    {
+        "id": "fc2a1412.370a68",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "10.0.2.43",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "453efb98d6c4fbb2",
+        "type": "ui_group",
+        "name": "Gps",
+        "tab": "936db0c17fa79118",
+        "order": 6,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "936db0c17fa79118",
+        "type": "ui_tab",
+        "name": "Diego Gps_Esp32",
+        "icon": "dashboard",
+        "order": 3,
+        "disabled": false,
+        "hidden": false
+    }
+]
